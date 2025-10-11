@@ -5,7 +5,12 @@ import logging
 from pathlib import Path
 
 # Import mappings for better field label extraction
-from .mappings import resource_mappings, predicates_mapping, class_mappings
+from .mappings import (
+    resource_mappings,
+    predicates_mapping,
+    class_mappings,
+    list_of_other_comments,
+)
 
 
 class PDFFormExtractor:
@@ -24,6 +29,7 @@ class PDFFormExtractor:
         self.resource_mappings = resource_mappings
         self.predicates_mapping = predicates_mapping
         self.class_mappings = class_mappings
+        self.list_of_other_comments = list_of_other_comments
 
         # Precompute an index from question_mapping tokens (e.g., 'II.1') to resource_mapping_key
         self._question_mapping_index = self._build_question_mapping_index()
@@ -299,11 +305,36 @@ class PDFFormExtractor:
             all_options = list(option_labels_to_info.values())
 
             # Rebuild selected_options from options after supplementation
-            selected_options = [
-                info.get("label")
-                for _key, info in option_labels_to_info.items()
-                if info.get("is_selected")
-            ]
+            selected_options = []
+            other_comments_text_found = None
+
+            # First pass: collect all selected options and check for "Other/Comments" with text
+            for _key, info in option_labels_to_info.items():
+                if info.get("is_selected"):
+                    field_value = info.get("field_value", "").strip()
+                    label = info.get("label", "") or ""
+
+                    # Check if this is an "Other/Comments" option with meaningful text content
+                    is_other_comments = any(
+                        other_comment.lower() in label.lower()
+                        for other_comment in self.list_of_other_comments
+                    )
+
+                    if (
+                        is_other_comments
+                        and field_value
+                        and len(field_value) > 3
+                        and field_value.lower() not in ["off", "yes", "no"]
+                    ):
+                        # This is an "Other/Comments" option with actual comment text
+                        other_comments_text_found = field_value
+                    elif not is_other_comments:
+                        # Only add non-"Other/Comments" options
+                        selected_options.append(label)
+
+            # If we found "Other/Comments" with text, use that instead of the generic label
+            if other_comments_text_found:
+                selected_options.append(other_comments_text_found)
 
             # Add missing expected options if mappings suggest they should be present
             if expected_options and self.debug:
@@ -1043,10 +1074,33 @@ class PDFFormExtractor:
             # Get the text answer
             text_answer = text_question.get("answer", "").strip()
 
-            # Append text answer to selected_answers if it's not empty
+            # Handle text answer for selected_answers
             if text_answer:
                 selected_answers = choice_question.get("selected_answers", [])
-                if selected_answers and selected_answers != ["None"]:
+
+                # Check if "Other/Comments" is in the selected answers
+                other_comments_found = any(
+                    any(
+                        other_comment.lower() in answer.lower()
+                        for other_comment in self.list_of_other_comments
+                    )
+                    for answer in selected_answers
+                )
+
+                if other_comments_found:
+                    # Replace "Other/Comments" with the actual comment text
+                    new_selected_answers = []
+                    for answer in selected_answers:
+                        is_other_comment = any(
+                            other_comment.lower() in answer.lower()
+                            for other_comment in self.list_of_other_comments
+                        )
+                        if is_other_comment:
+                            new_selected_answers.append(text_answer)
+                        else:
+                            new_selected_answers.append(answer)
+                    selected_answers = new_selected_answers
+                elif selected_answers and selected_answers != ["None"]:
                     # Append the text answer to existing selected answers
                     selected_answers.append(text_answer)
                 else:
