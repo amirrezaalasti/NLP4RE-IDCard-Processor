@@ -1,7 +1,6 @@
 test.py
 test.ipynb
 __pycache__/
-config.py
 .DS_Store
 pdf_files/
 run_logs/
