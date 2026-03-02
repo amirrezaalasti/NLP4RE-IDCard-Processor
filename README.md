@@ -34,15 +34,12 @@ python batch_process.py
 
 ### ORKG Configuration
 
-The ORKG connection and commonly used predicate/class identifiers are configured in `scripts/config.py`:
+The ORKG connection settings are configured in `scripts/config.py`:
 
 - **`ORKG_HOST`**: Base URL of the ORKG instance to connect to (default: `https://orkg.org`).
 - **`ORKG_USERNAME` / `ORKG_PASSWORD`**: ORKG account credentials used when creating templates or instances. **Do not commit real credentials**; either set them via environment variables and load them in `config.py`, or keep this file local and excluded from version control.
-- **`PREDICATES`**: Mapping of commonly used predicate identifiers (e.g., `sh:targetClass`, `sh:property`, `sh:path`, etc.) used when building SHACL shapes for templates.
-- **`CLASSES`**: Mapping of commonly used ORKG classes (e.g., `NodeShape`, `PropertyShape`) referenced in template definitions.
-- **`DATATYPES`**: Mapping from human-friendly names to RDF datatypes (e.g., `"String"` → `xsd:string`, `"xsd:integer"` → `xsd:integer`).
 
-Adjust these values to match your ORKG deployment and the vocabularies you use when generating templates.
+Set these values to match your ORKG deployment before running `create_instance.py` or any scripts that interact with ORKG.
 
 ## Technical Implementation
 
