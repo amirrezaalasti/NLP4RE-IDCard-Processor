@@ -1,7 +1,10 @@
 # NLP4RE ID Card Processing System
+<div align="center">
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
 [![Paper](https://img.shields.io/badge/CEUR--WS-Vol--4208-blue)](https://ceur-ws.org/Vol-4208/nlp4re-short4.pdf)
+
+</div>
 
 This repository contains the implementation of an automated system for extracting and processing NLP4RE (Natural Language Processing for Requirements Engineering) ID Card data from PDF forms. The system converts interactive PDF form submissions into structured JSON format suitable for integration with the Open Research Knowledge Graph (ORKG).
 
